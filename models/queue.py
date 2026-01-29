@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 from enums.TaskStatus import TaskStatus
+from system.worker import Worker
 from task import Task
 
 """
@@ -23,6 +24,19 @@ concurrency primitive, which better reflects idiomatic and production-realistic 
 - Since I'm following SpringQueue as a map more than GoQueue, and jumping straight to using ThreadPoolExecutor,
 I'm saving some time and don't need GoQueue-specific methods like dequeue() since it's automated here.
 
+- THE BIG ERGONOMIC CHANGE:
+```
+In the original SpringQueue implementation, Worker implements Java’s Runnable interface, allowing an ExecutorService 
+to accept a Worker object and implicitly invoke its run() method (executor.submit(new Worker(task, queue))). 
+Python’s ThreadPoolExecutor does not support this object-centric execution model; instead, it executes explicit 
+callables (functions or bound methods) with no implicit interface lookup. During the initial translation, this mismatch 
+surfaced when attempting to submit task.execute and defining Worker.run(task)—both of which conflict with Python’s 
+execution semantics. The correct Python mapping is to treat Worker as a stateful execution unit that owns its Task, 
+expose a zero-argument run() method, and submit the bound method (worker.run) directly to the executor. 
+This preserves SpringQueue’s separation of data (Task) and behavior (Worker) while adapting cleanly to Python’s more 
+explicit, function-driven concurrency model.
+```
+
 ***
 NOTE: Don't forget to save a snapshot of my post-GoQueue translation project state for future
 documentation. I didn't do this with SpringQueuePro, and it's been a pain combing back through
@@ -44,7 +58,8 @@ class Queue:
         self.lock.acquire()
         try:
             self.jobs[task.t_id] = task
-            self.executor.submit(task.execute)
+            worker = Worker(task, self)
+            self.executor.submit(worker.run())
         finally:
             self.lock.release()
 

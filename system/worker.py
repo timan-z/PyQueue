@@ -37,15 +37,15 @@ class Worker:
         self.queue = queue  # Coordination service (for retries / re-enqueue)
 
     # 1. Translating - public void run() {...}:
-    def run(self, task: Task):
+    def run(self):
         try:
-            task.attempts = task.attempts + 1
-            task.status = TaskStatus.INPROGRESS
-            print(f"[Worker] Processing Task {task.t_id} (Attempt {task.attempts}, Type: {task.t_type})")
-            self.handle_task_type(task)
+            self.task.attempts = self.task.attempts + 1
+            self.task.status = TaskStatus.INPROGRESS
+            print(f"[Worker] Processing Task {self.task.t_id} (Attempt {self.task.attempts}, Type: {self.task.t_type})")
+            self.handle_task_type(self.task)
         except Exception as e:
-            print(f"[Worker] Task {task.t_id} failed due to error: {e}")
-            task.status = TaskStatus.FAILED
+            print(f"[Worker] Task {self.task.t_id} failed due to error: {e}")
+            self.task.status = TaskStatus.FAILED
 
     # 2. Translating - private void handleTaskType(Task t) throws InterruptedException {...}:
     def handle_task_type(self, task: Task):
