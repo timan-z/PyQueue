@@ -1,20 +1,29 @@
-import time
-
 from fastapi import FastAPI
-
-import datetime
 from models.queue import Queue
-from models.task import Task
-from enums.TaskType import TaskType
-from enums.TaskStatus import TaskStatus
 from system.producer import router, set_queue
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(the_app: FastAPI):
+    # on startup:
+    q = Queue()
+    set_queue(q)
 
-queue = Queue()
-set_queue(queue)
+    try:
+        yield
+    finally:
+        # on shutdown:
+        q.shutdown()
+
+app = FastAPI(lifespan=lifespan)
 app.include_router(router)
 
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
+
+# PyCharm's default FastAPI set-up code:
+"""
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -22,6 +31,7 @@ async def root():
 @app.get("/hello/{name}")
 async def say_hello(name: str):
     return {"message": f"Hello {name}"}
+"""
 
 """
 During the SpringQueue-Translation phase, main.py will be responsible for:
@@ -46,26 +56,4 @@ the Queue instance, submitting work to the executor, keeping the process alive l
 and shutting down cleanly. In other words, even though PyQueue lives inside a FastAPI project, the translation phase requires 
 a Go-style “explicit wiring” entrypoint rather than Spring’s “implicit wiring” application launcher.
 ```
-"""
-
-# Phase 1 legacy code (FastAPI will now be the lifecycle owner):
-"""
-def main():
-    # Some test code before setting up HTTP routes and that stuff... (it will move to FastAPI startup later).
-    q = Queue()
-    # Some test Tasks:
-    t1 = Task("Task 1", "Payload 1", TaskType.EMAIL, TaskStatus.QUEUED, 0, 3, datetime.datetime.now())
-    # NOTE: Maybe I should adjust task.py so that status isn't set or is just set to None?
-    t2 = Task("Task 2", "Payload 2", TaskType.NEWSLETTER, TaskStatus.QUEUED, 0, 3, datetime.datetime.now())
-    t3 = Task("Task 3", "Payload 3", TaskType.DATACLEANUP, TaskStatus.QUEUED, 0, 3, datetime.datetime.now())
-    # Test enqueue:
-    q.enqueue(t1)
-    q.enqueue(t2)
-    q.enqueue(t3)
-
-    while True:
-        time.sleep(2)
-
-if __name__ == "__main__":
-    main()
 """
