@@ -1,8 +1,8 @@
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 from enums.TaskStatus import TaskStatus
-from system.worker import Worker
-from task import Task
+#from system.worker import Worker
+from models.task import Task
 
 """
 Avoid using async def, FastAPI background tasks, asyncio.Queue, and so on for now.
@@ -52,6 +52,7 @@ class Queue:
 
     # 1. Translating - public void enqueue(Task t) {...}:
     def enqueue(self, task):
+        from system.worker import Worker
         task.status = TaskStatus.QUEUED
         if task.attempts == 0:
             task.max_retries = 3
@@ -59,7 +60,7 @@ class Queue:
         try:
             self.jobs[task.t_id] = task
             worker = Worker(task, self)
-            self.executor.submit(worker.run())
+            self.executor.submit(worker.run)
         finally:
             self.lock.release()
 
@@ -115,4 +116,5 @@ class Queue:
 
     # Shutdown method:
     def shutdown(self):
-        print("Seems like this should just be a stub for now?")
+        #print("Seems like this should just be a stub for now?")
+        self.executor.shutdown()

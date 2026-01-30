@@ -1,0 +1,20 @@
+I have circular imports that I need to take care of in the refactoring phase.
+For example:
+```
+# queue.py
+from system.worker import Worker
+
+# worker.py
+from models.queue import Queue
+```
+This comes from the SpringQueue translation, where is taken care of by way of SpringBoot features
+that aren't a thing over here.
+
+[For later doc]:
+^ These circular dependencies were harmless in Spring (e.g., QueueService ↔ Worker) but immediately fail in Python.
+This is because Python imports are executed eagerly, not scanned lazily. (I believe I literally had the @Lazy Spring
+annotation in some of my SpringQueue .java files). But unlike Spring’s component scanning and dependency injection—which
+resolve references after class loading—Python requires modules to be fully initialized at import time. This means that
+import order matters and cycles must be broken explicitly (mirroring Go’s explicit wiring model). This required
+restructuring imports to avoid top-level circular references and reinforced that PyQueue’s bootstrap
+phase more closely resembles GoQueue than SpringQueue.
