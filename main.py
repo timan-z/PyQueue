@@ -7,8 +7,13 @@ from models.queue import Queue
 from models.task import Task
 from enums.TaskType import TaskType
 from enums.TaskStatus import TaskStatus
+from system.producer import router, set_queue
 
 app = FastAPI()
+
+queue = Queue()
+set_queue(queue)
+app.include_router(router)
 
 @app.get("/")
 async def root():
@@ -43,8 +48,10 @@ a Go-style “explicit wiring” entrypoint rather than Spring’s “implicit w
 ```
 """
 
+# Phase 1 legacy code (FastAPI will now be the lifecycle owner):
+"""
 def main():
-    # Some test code before setting up HTTP routes and that stuff...
+    # Some test code before setting up HTTP routes and that stuff... (it will move to FastAPI startup later).
     q = Queue()
     # Some test Tasks:
     t1 = Task("Task 1", "Payload 1", TaskType.EMAIL, TaskStatus.QUEUED, 0, 3, datetime.datetime.now())
@@ -61,3 +68,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+"""
