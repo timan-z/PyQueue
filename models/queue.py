@@ -1,7 +1,8 @@
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
+from typing import Optional
+
 from enums.TaskStatus import TaskStatus
-#from system.worker import Worker
 from models.task import Task
 
 """
@@ -44,15 +45,35 @@ old commits to write the architectural evolution document
 """
 # DEBUG: Can add type hints for parameters but maybe leave the return type hints until after refactoring.
 class Queue:
-    # 0. Equivalent of SpringQueue's QueueService.java's constructor:
-    def __init__(self):
-        self.executor = ThreadPoolExecutor(max_workers=3)
-        self.jobs: dict[str, Task] = {}  # This will be the task registry (equivalent of ConcurrentHashMap<String, Task> in SpringQueue).
-        self.lock = Lock()  # Lock to protect shared state (there's no RWLock in Python. This and the {} above are queue.py's ConcurrentHashMap...)
+    """
+    This is the runtime coordination service for Tasks. (Equivalent of queue.go and QueueService.java).
+    It owns:
+    - Task Registry
+    - Worker execution lifecycle
+    - Thread pool
+    """
 
-    # 1. Translating - public void enqueue(Task t) {...}:
-    def enqueue(self, task):
-        from system.worker import Worker
+    # 0. CONSTRUCTOR - Equivalent of SpringQueue's QueueService.java's constructor:
+    def __init__(self) -> None:
+        self.executor: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=3)   # TO-DO:+DEBUG: Eventually change max_workers to be configurable (like I did in SpringQueuePro -- later).
+        self.jobs: dict[str, Task] = {}  # This will be the task registry (equivalent of ConcurrentHashMap<String, Task> in SpringQueue).
+        self.lock: Lock = Lock()  # Lock to protect shared state (there's no RWLock in Python. This and the {} above are queue.py's ConcurrentHashMap...)
+
+    # 1. Enqueue a task: Translating - public void enqueue(Task t) {...}:
+    def enqueue(self, task: Task) -> None:
+        """
+        Registers a Task and submits it for execution.
+        Assumes the task is already fully initialized.
+        """
+        from system.worker import Worker    # TO-DO: This will be lifted out of here when FastAPI Dependency Injection is layered in.
+
+        # 2026-01-31: Original Lock and release effect replaced with context manager - lock lifts when all lines are executed (basically just shortens code):
+        with self.lock:
+            self.jobs[task.t_id] = task
+        worker = Worker(task, self)
+        self.executor.submit(worker.run)
+        # Earlier stage legacy code (code structure directly from the SpringQueue and GoQueue translation phase):
+        """
         task.status = TaskStatus.QUEUED
         if task.attempts == 0:
             task.max_retries = 3
@@ -63,17 +84,20 @@ class Queue:
             self.executor.submit(worker.run)
         finally:
             self.lock.release()
+        """
 
-    # 2. Translating - public void clear() {...}:
-    def clear(self):
-        self.lock.acquire()
-        try:
+    # 2. Clear all jobs: Translating - public void clear() {...}:
+    def clear(self) -> None:
+        with self.lock:
             self.jobs.clear()
-        finally:
-            self.lock.release()
 
-    # 3. Translating - public Task[] getJobs() {...}:
-    def get_jobs(self):
+    # 3. Get all jobs (snapshot): Translating - public Task[] getJobs() {...}:
+    def get_jobs(self) -> list[Task]:
+        # Returns a snapshot of all tracked tasks:
+        with self.lock:
+            return list(self.jobs.values())
+        # Earlier stage legacy code:
+        """
         self.lock.acquire()
         #all_tasks: list[Task] | list[None] = [None] * len(self.jobs)
         all_tasks = []
@@ -86,35 +110,27 @@ class Queue:
         finally:
             self.lock.release()
         return all_tasks
+        """
 
-    # 4. Translating - public Task getJobById(String id) {...}:
-    def get_job_by_id(self, t_id: str):
-        self.lock.acquire()
-        t = None
-        try:
-            if t_id in self.jobs:
-                t = self.jobs[t_id]
-        finally:
-            self.lock.release()
-        return t
+    # 4. Get job by ID: Translating - public Task getJobById(String id) {...}:
+    def get_job_by_id(self, t_id: str) -> Optional[Task]:
+        with self.lock:
+            return self.jobs.get(t_id)
 
-    # 5. Translating - public boolean deleteJob(String id) {...}:
-    def delete_job(self, t_id: str):
-        self.lock.acquire()
-        res = False
-        try:
+    # 5. Delete job: Translating - public boolean deleteJob(String id) {...}:
+    def delete_job(self, t_id: str) -> bool:
+        with self.lock:
             if t_id in self.jobs:
                 del self.jobs[t_id]
-                res = True
-        finally:
-            self.lock.release()
-        return res
+                return True
+            return False
 
     # Helper methods:
-    def get_job_count(self):
-        return len(self.jobs)
+    def get_job_count(self) -> int:
+        with self.lock:
+            return len(self.jobs)
 
     # Shutdown method:
-    def shutdown(self):
+    def shutdown(self) -> None:
         #print("Seems like this should just be a stub for now?")
-        self.executor.shutdown()
+        self.executor.shutdown(wait = True)

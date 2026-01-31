@@ -6,8 +6,6 @@ from models.queue import Queue
 from enums.TaskType import TaskType
 from enums.TaskStatus import TaskStatus
 from models.task import Task
-import datetime
-import time
 
 from schemas.mappers import task_to_response
 from schemas.task import TaskResponse
