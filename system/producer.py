@@ -23,8 +23,8 @@ def set_queue(q: Queue):
     global queue
     queue = q
 
-# Equivalent of ProducerController.java's "public static class EnqueueReq { public String payload; public String type }":
-class EnqueueReq(BaseModel):
+# Equivalent of ProducerController.java's "public static class EnqueueRequest { public String payload; public String type }":
+class EnqueueRequest(BaseModel):
     payload: str
     t_type: TaskType
 
@@ -36,9 +36,9 @@ def require_queue() -> Queue:
         raise HTTPException(status_code=503, detail="Queue not initialized")
     return queue
 
-# 1. Translating - @PostMapping("/enqueue") ... public ResponseEntity<Map<String, String>> handleEnqueue(@RequestBody EnqueueReq req) {...}:
+# 1. Translating - @PostMapping("/enqueue") ... public ResponseEntity<Map<String, String>> handleEnqueue(@RequestBody EnqueueRequest req) {...}:
 @router.post("/enqueue")
-def enqueue(req: EnqueueReq):
+def enqueue(req: EnqueueRequest) -> dict[str, str]:
     q = require_queue()
     #created_at = datetime.datetime.now() #.strftime("%Y-%m-%d %H:%M:%S")  # Translating what I did w/ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     task = Task.create(req.payload, req.t_type)
@@ -51,16 +51,32 @@ NOTE(S)-TO-SELF:
 - Query parameters in FastAPI are just function parameters, and for optional params you'd just do Optional[T] (or T | None) and then Query(...)
 - [@RequestParam(required = false) String status] becomes [status: Optional[str] = Query(default = None)]
 """
-@router.get("/jobs", response_model=list[TaskResponse] )
-def get_jobs(status: Optional[str] = Query(default = None)):
+@router.get("/jobs", response_model=list[TaskResponse])
+def get_jobs(status: Optional[str] = Query(default = None)) -> list[TaskResponse]:
     q = require_queue()
+    all_jobs = q.get_jobs()
+    status_enum: Optional[TaskStatus] = None
+    if status is not None:
+        try:
+            status_enum = TaskStatus[status.upper()]
+        except KeyError:
+            raise HTTPException(status_code=400, detail="Invalid status filter")
+
+    return [
+        task_to_response(t)
+        for t in all_jobs
+        if status_enum is None or t.status == status_enum
+    ]
+    # Old code (refactored to the more verbose but safer version above because the list calculations inside do some dangerous tight coupling):
+    """
     all_jobs = q.get_jobs()
     filtered = [ task_to_response(t) for t in all_jobs if status is None or t.status.name.lower() == status.lower() ]
     return filtered
+    """
 
 # 3. Translating @GetMapping("/jobs/{id}") ... public ResponseEntity<Task> handleGetJobById(@PathVariable String id) {...}
 @router.get("/jobs/{job_id}", response_model=TaskResponse)
-def get_job(job_id: str):
+def get_job(job_id: str) -> TaskResponse:
     q = require_queue()
     task = q.get_job_by_id(job_id)
     if task is None:
@@ -69,7 +85,7 @@ def get_job(job_id: str):
 
 # 4. Translating @PostMapping("/jobs/{id}/retry") ... public ResponseEntity<?> handleRetryJobById(@PathVariable String id) {...}
 @router.post("/jobs/{job_id}/retry", response_model=TaskResponse)
-def retry_job(job_id: str):
+def retry_job(job_id: str) -> TaskResponse:
     q = require_queue()
     task = q.get_job_by_id(job_id)
     if task is None:
@@ -77,21 +93,21 @@ def retry_job(job_id: str):
     if task.status != TaskStatus.FAILED:
         raise HTTPException(status_code=400, detail=f"Job {job_id} is not a failed Task. Can only retry failed Tasks.")
     task_clone = Task.create(task.payload, task.t_type)
-    queue.enqueue(task_clone)
+    q.enqueue(task_clone)
     return task_to_response(task_clone)
 
 # 5. Translating @DeleteMapping("/jobs/{id}") ... public ResponseEntity<?> handleDeleteJobById(@PathVariable String id) {...}
 @router.delete("/jobs/{job_id}")
-def delete_job(job_id: str):
+def delete_job(job_id: str) -> dict[str, str]:
     q = require_queue()
     result = q.delete_job(job_id)
-    if result is False:
+    if not result:
         raise HTTPException(status_code=404, detail=f"Job {job_id} not found. Could not be deleted.")
     return { "message": f"Job {job_id} deleted!" }
 
 # 6. @PostMapping("/clear") ... public ResponseEntity<?> clearQueue() {...}
 @router.post("/clear")
-def clear_queue():
+def clear_queue() -> dict[str, str]:
     q = require_queue()
     q.clear()
     return { "message": "All jobs in the queue cleared!" }
