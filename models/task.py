@@ -1,4 +1,5 @@
 import datetime
+import time
 from dataclasses import dataclass
 from enums.TaskStatus import TaskStatus
 from enums.TaskType import TaskType
@@ -12,6 +13,29 @@ class Task:
     attempts: int
     max_retries: int
     created_at: datetime.datetime
+
+    """
+    2026-01-31-NOTE:
+    "create" method below is the new single source for ID generation, timestamps, and setting retry defaults.
+    Better because:
+    - Producers no longer know how tasks are initialized.
+    - Retry logic becomes trivial and consistent.
+    - Easier for later migrations (DB persistence, tracing IDs, etc).
+    ALSO:
+    The -> "Task" you see is a forward reference. (Python evaluates type annotations at function definition time
+    so Task won't yet exist as a fully bound name -- that's why you need to do "Task", that's the workaround basically).
+    """
+    @classmethod
+    def create(cls, payload: str, t_type: TaskType) -> "Task":
+        return cls(
+            t_id=f"Task-{time.perf_counter_ns()}",
+            payload=payload,
+            t_type=t_type,
+            status=TaskStatus.QUEUED,
+            attempts=0,
+            max_retries=3,
+            created_at=datetime.datetime.now(),
+        )
 
 # Phase 1-2 (pre-@dataclass introduction) legacy code:
 """
