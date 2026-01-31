@@ -31,75 +31,101 @@ I did a bad job of documenting little details like this in SpringQueue and Sprin
 """
 
 class Worker:
-    # 0. Equivalent of Worker.java's constructor:
-    def __init__(self, task: Task, queue: Queue):
-        self.task = task    # The unit of work being processed.
-        self.queue = queue  # Coordination service (for retries / re-enqueue)
+    """
+    Basically a (Worker) Thread - executes a single Task/Job.
+    One Worker instance == one execution attempt lifecycle.
+    """
 
-    # 1. Translating - public void run() {...}:
-    def run(self):
+    # 0. Constructor: Equivalent of Worker.java's constructor:
+    def __init__(self, task: Task, queue: Queue) -> None:
+        self.task: Task = task    # The unit of work being processed.
+        self.queue: Queue = queue  # Coordination service (for retries / re-enqueue)
+
+    # 1. Entry point for Executor: Translating - public void run() {...}:
+    def run(self) -> None:
+        """
+        Executor entrypoint. Mutates task state and then delegates execution logic.
+        """
         try:
             self.task.attempts = self.task.attempts + 1
             self.task.status = TaskStatus.INPROGRESS
             print(f"[Worker] Processing Task {self.task.t_id} (Attempt {self.task.attempts}, Type: {self.task.t_type})")
-            self.handle_task_type(self.task)
-        except Exception as e:
-            print(f"[Worker] Task {self.task.t_id} failed due to error: {e}")
+            self._handle_task_type(self.task)
+
+        except RuntimeError as e:
+            print(f"[Worker] Runtime error in task {self.task.t_id}: {e}")
             self.task.status = TaskStatus.FAILED
 
-    # 2. Translating - private void handleTaskType(Task t) throws InterruptedException {...}:
-    def handle_task_type(self, task: Task):
+        except Exception as e:
+            print(f"[Worker] Unexpected failure in task {self.task.t_id}: {e}")
+            self.task.status = TaskStatus.FAILED
+
+    # 2. Dispatch based on task type: Translating - private void handleTaskType(Task t) throws InterruptedException {...}:
+    def _handle_task_type(self, task: Task) -> None:
         match task.t_type:
             case TaskType.FAIL:
-                self.handle_fail_type(task)
+                self._handle_fail_type(task)
             case TaskType.FAILABS:
-                self.handle_absolute_fail(task)
+                self._handle_absolute_fail(task)
             case TaskType.EMAIL:
-                self.simulate_work(task, 2000, str(TaskType.EMAIL))
+                self._simulate_work(task, 2000)
             case TaskType.REPORT:
-                self.simulate_work(task, 5000, str(TaskType.REPORT))
+                self._simulate_work(task, 5000)
             case TaskType.DATACLEANUP:
-                self.simulate_work(task, 3000, str(TaskType.DATACLEANUP))
+                self._simulate_work(task, 3000)
             case TaskType.SMS:
-                self.simulate_work(task, 1000, str(TaskType.SMS))
+                self._simulate_work(task, 1000)
             case TaskType.NEWSLETTER:
-                self.simulate_work(task, 4000, str(TaskType.NEWSLETTER))
+                self._simulate_work(task, 4000)
             case TaskType.TAKESLONG:
-                self.simulate_work(task, 10000, str(TaskType.TAKESLONG))
+                self._simulate_work(task, 10000)
             case _:
-                self.simulate_work(task, 2000, "Undefined")
+                self._simulate_work(task, 2000)
 
-    #3. Translating - private void handleFailType(Task t) throws InterruptedException {...}:
-    def handle_fail_type(self, task: Task):
-        success_chance = 0.25
+    #3. Fail-with-retry: Translating - private void handleFailType(Task t) throws InterruptedException {...}:
+    def _handle_fail_type(self, task: Task) -> None:
+        success_chance: float = 0.25
         random_float = random.uniform(0, 1)
         if random_float <= success_chance:
-            time.sleep(2000 / 1000)
+            self._sleep_ms(2000)
             task.status = TaskStatus.COMPLETED
             print(f"[Worker] Task {task.t_id} (Type: {task.t_type}) - 0.25 success rate on retry) completed")
         else:
-            time.sleep(1000 / 1000)
+            self._sleep_ms(1000)
+            self._retry_or_fail(task)
+            # Old code factored out (of this and _handle_absolute_fail):
+            """
             task.status = TaskStatus.FAILED
             if task.attempts < task.max_retries:
                 print(f"[Worker] Task {task.t_id} (Type: {task.t_type} - 0.25 success rate on retry) failed! Retrying...")
                 self.queue.enqueue(task)
             else:
                 print(f"[Worker] Task {task.t_id} (Type: {task.t_type} - 0.25 success rate on retry) failed permanently!")
+            """
 
     # 4. Translating - private void handleAbsoluteFail(Task t) throws InterruptedException {...}:
-    def handle_absolute_fail(self, task: Task):
-        # DEBUG: Not sure if I should enforce a "private" equivalence here?
-        time.sleep(1000 / 1000)
-        task.status = TaskStatus.FAILED
-        if task.attempts < task.max_retries:
-            print(f"[Worker] Task {task.t_id} (Type: FAILABS) failed! Retrying...")
-            self.queue.enqueue(task)
-        else:
-            print(f"[Worker] Task {task.t_id} (Type: FAILABS) failed permanently!")
+    def _handle_absolute_fail(self, task: Task) -> None:
+        self._sleep_ms(1000)
+        self._retry_or_fail(task)
 
     # 5. Translating - private void simulateWork(Task t, int durationMs, String type) throws InterruptedException {...}:
-    def simulate_work(self, task: Task, duration_ms: int, t_type: str):
+    def _simulate_work(self, task: Task, duration_ms: int) -> None:
         # DEBUG: Not sure if I should enforce a "private" equivalence here?
-        time.sleep(duration_ms / 1000)
+        self._sleep_ms(duration_ms)
         task.status = TaskStatus.COMPLETED
-        print(f"[Worker] Task {task.t_id} (Type: {t_type}) complete")
+        print(f"[Worker] Task {task.t_id} (Type: {task.t_type}) complete")
+
+    # Helper Method(s):
+    # Shared retry logic for _handle_fail_type and _handle_absolute_fail:
+    def _retry_or_fail(self, task: Task) -> None:
+        task.status = TaskStatus.FAILED
+        if task.attempts < task.max_retries:
+            print(f"[Worker] Task {task.t_id} (Type: {task.t_type}) failed! Retrying...")
+            self.queue.enqueue(task)
+        else:
+            print(f"[Worker] Task {task.t_id} (Type: {task.t_type}) failed permanently!")
+
+    # Sleep method (/1000 conversion needed to bridge gap between Java and Python):
+    @staticmethod
+    def _sleep_ms(ms: int) -> None:
+        time.sleep(ms / 1000)
