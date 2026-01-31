@@ -1,7 +1,8 @@
 from enum import Enum, auto
 
+# See "2026-01-31" stamped comment I left at the top of enums/TaskType.py
 class TaskStatus(Enum):
-    QUEUED = auto()
-    INPROGRESS = auto()
-    COMPLETED = auto()
-    FAILED = auto()
+    QUEUED = "QUEUED"
+    INPROGRESS = "INPROGRESS"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
