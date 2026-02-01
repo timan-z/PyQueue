@@ -7,7 +7,7 @@ For API-facing enums (here), it's best practice to have string enums instead of 
 - Realized this issue when Postman testing my Phase 2 implementation of this project: "EMAIL" not getting recognized for enqueueing new tasks.
 - FastAPI's OpenAPI docs look much cleaner this way too (and of course makes the later frontend integration much easier).
 """
-class TaskType(Enum):
+class TaskType(str, Enum):
     EMAIL = "EMAIL"
     REPORT = "REPORT"
     DATACLEANUP = "DATACLEANUP"

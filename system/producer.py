@@ -33,11 +33,11 @@ class EnqueueRequest(BaseModel):
 # 2026-01-31: Temp helper for checking if the Queue is initialized (will be removed in the final pass of this Phase where I introduce FastAPI DI w/ depends):
 def require_queue() -> Queue:
     if queue is None:
-        raise HTTPException(status_code=503, detail="Queue not initialized")
+        raise HTTPException(status_code=503, detail="Queue not initialized (service unavailable)")
     return queue
 
 # 1. Translating - @PostMapping("/enqueue") ... public ResponseEntity<Map<String, String>> handleEnqueue(@RequestBody EnqueueRequest req) {...}:
-@router.post("/enqueue")
+@router.post("/enqueue", response_model=dict[str,str])
 def enqueue(req: EnqueueRequest) -> dict[str, str]:
     q = require_queue()
     #created_at = datetime.datetime.now() #.strftime("%Y-%m-%d %H:%M:%S")  # Translating what I did w/ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -97,7 +97,7 @@ def retry_job(job_id: str) -> TaskResponse:
     return task_to_response(task_clone)
 
 # 5. Translating @DeleteMapping("/jobs/{id}") ... public ResponseEntity<?> handleDeleteJobById(@PathVariable String id) {...}
-@router.delete("/jobs/{job_id}")
+@router.delete("/jobs/{job_id}", response_model=dict[str,str])
 def delete_job(job_id: str) -> dict[str, str]:
     q = require_queue()
     result = q.delete_job(job_id)
@@ -106,7 +106,7 @@ def delete_job(job_id: str) -> dict[str, str]:
     return { "message": f"Job {job_id} deleted!" }
 
 # 6. @PostMapping("/clear") ... public ResponseEntity<?> clearQueue() {...}
-@router.post("/clear")
+@router.post("/clear", response_model=dict[str,str])
 def clear_queue() -> dict[str, str]:
     q = require_queue()
     q.clear()
