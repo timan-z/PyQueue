@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Depends, Request
 from pydantic import BaseModel
 # Custom imports:
 from models.queue import Queue
@@ -16,12 +16,26 @@ This producer.py file would certainly be more closely modeled after ProducerCont
 
 router = APIRouter(prefix="/api") # Equivalent of @RequestMapping("/api") - APIRouter is essentially @RestController
 
+# 2026-02-01-NOTE: FastAPI's Dependency Injection-related code below:
+# This specific function below is basically FastAPI's equivalent of @Autowired QueueService (in my SpringQueue project) - It's a scoped DI provider.
+def get_queue(request: Request) -> Queue:
+    return request.app.state.queue
+
+# 2026-02-01-NOTE: This commented out block below is Pre-Dependency Injection legacy code (what was used before it):
+"""
 # FastAPI's model doesn't use constructors here so I need to do module-level injection for things like Queue (not yet going to touch its DI):
 queue: Queue | None = None
 
 def set_queue(q: Queue):
     global queue
     queue = q
+
+# 2026-01-31: Temp helper for checking if the Queue is initialized (will be removed in the final pass of this Phase where I introduce FastAPI DI w/ depends):
+def require_queue() -> Queue:
+    if queue is None:
+        raise HTTPException(status_code=503, detail="Queue not initialized (service unavailable)")
+    return 
+"""
 
 # Equivalent of ProducerController.java's "public static class EnqueueRequest { public String payload; public String type }":
 class EnqueueRequest(BaseModel):
@@ -30,16 +44,9 @@ class EnqueueRequest(BaseModel):
 
 # 0. Translating routes. NOTE: In my ProducerController.java, the methods were all "handle_enqueue" and named like that (because I was translating directly from Go and copied its wording conventions).
 
-# 2026-01-31: Temp helper for checking if the Queue is initialized (will be removed in the final pass of this Phase where I introduce FastAPI DI w/ depends):
-def require_queue() -> Queue:
-    if queue is None:
-        raise HTTPException(status_code=503, detail="Queue not initialized (service unavailable)")
-    return queue
-
 # 1. Translating - @PostMapping("/enqueue") ... public ResponseEntity<Map<String, String>> handleEnqueue(@RequestBody EnqueueRequest req) {...}:
 @router.post("/enqueue", response_model=dict[str,str])
-def enqueue(req: EnqueueRequest) -> dict[str, str]:
-    q = require_queue()
+def enqueue(req: EnqueueRequest, q: Queue = Depends(get_queue)) -> dict[str, str]:
     #created_at = datetime.datetime.now() #.strftime("%Y-%m-%d %H:%M:%S")  # Translating what I did w/ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     task = Task.create(req.payload, req.t_type)
     q.enqueue(task)
@@ -52,8 +59,7 @@ NOTE(S)-TO-SELF:
 - [@RequestParam(required = false) String status] becomes [status: Optional[str] = Query(default = None)]
 """
 @router.get("/jobs", response_model=list[TaskResponse])
-def get_jobs(status: Optional[str] = Query(default = None)) -> list[TaskResponse]:
-    q = require_queue()
+def get_jobs(status: Optional[str] = Query(default = None), q: Queue = Depends(get_queue)) -> list[TaskResponse]:
     all_jobs = q.get_jobs()
     status_enum: Optional[TaskStatus] = None
     if status is not None:
@@ -76,8 +82,7 @@ def get_jobs(status: Optional[str] = Query(default = None)) -> list[TaskResponse
 
 # 3. Translating @GetMapping("/jobs/{id}") ... public ResponseEntity<Task> handleGetJobById(@PathVariable String id) {...}
 @router.get("/jobs/{job_id}", response_model=TaskResponse)
-def get_job(job_id: str) -> TaskResponse:
-    q = require_queue()
+def get_job(job_id: str, q: Queue = Depends(get_queue)) -> TaskResponse:
     task = q.get_job_by_id(job_id)
     if task is None:
         raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
@@ -85,8 +90,7 @@ def get_job(job_id: str) -> TaskResponse:
 
 # 4. Translating @PostMapping("/jobs/{id}/retry") ... public ResponseEntity<?> handleRetryJobById(@PathVariable String id) {...}
 @router.post("/jobs/{job_id}/retry", response_model=TaskResponse)
-def retry_job(job_id: str) -> TaskResponse:
-    q = require_queue()
+def retry_job(job_id: str, q: Queue = Depends(get_queue)) -> TaskResponse:
     task = q.get_job_by_id(job_id)
     if task is None:
         raise HTTPException(status_code=404, detail=f"Job {job_id} not found. Could not be retried.")
@@ -98,8 +102,7 @@ def retry_job(job_id: str) -> TaskResponse:
 
 # 5. Translating @DeleteMapping("/jobs/{id}") ... public ResponseEntity<?> handleDeleteJobById(@PathVariable String id) {...}
 @router.delete("/jobs/{job_id}", response_model=dict[str,str])
-def delete_job(job_id: str) -> dict[str, str]:
-    q = require_queue()
+def delete_job(job_id: str, q: Queue = Depends(get_queue)) -> dict[str, str]:
     result = q.delete_job(job_id)
     if not result:
         raise HTTPException(status_code=404, detail=f"Job {job_id} not found. Could not be deleted.")
@@ -107,7 +110,6 @@ def delete_job(job_id: str) -> dict[str, str]:
 
 # 6. @PostMapping("/clear") ... public ResponseEntity<?> clearQueue() {...}
 @router.post("/clear", response_model=dict[str,str])
-def clear_queue() -> dict[str, str]:
-    q = require_queue()
+def clear_queue(q: Queue = Depends(get_queue)) -> dict[str, str]:
     q.clear()
     return { "message": "All jobs in the queue cleared!" }

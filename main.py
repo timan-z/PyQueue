@@ -1,11 +1,35 @@
 from fastapi import FastAPI
 from models.queue import Queue
-from system.producer import router, set_queue
+from system.producer import router
 from contextlib import asynccontextmanager
+
+"""
+For later documentation - some notes on layering in FastAPI's Dependency Injection:
+```
+Before layering in FastAPI's Dependency Injection, my main.py declares Queue as a global mutable state. 
+This is harder to test and tightly couples producer.py to startup ordering (it's not how FastAPI idiomatically expects services to be shared).
+
+To layer in FastAPI's DI, I need to store Queue on app.state and then access it with Depends(...)
+- I shouldn't be using globals, set_queue, or require_queue
+(And this mirrors Spring's application context, request-scoped DI, and of course production FastAPI patterns).
+
+app.state is FastAPI's official shared application container (and in it we declare one queue instance for the entire app).
+```
+"""
 
 @asynccontextmanager
 async def lifespan(the_app: FastAPI):
-    # on startup:
+    # 2026-02-01-NOTE: FastAPI DI Refactor.
+    # On startup:
+    the_app.state.queue = Queue()
+    try:
+        yield
+    finally:
+        # shutdown
+        the_app.state.queue.shutdown()
+
+    # [EDIT: Pre-DI Legacy Code] on startup:
+    """
     q = Queue()
     set_queue(q)
 
@@ -14,6 +38,7 @@ async def lifespan(the_app: FastAPI):
     finally:
         # on shutdown:
         q.shutdown()
+    """
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(router)

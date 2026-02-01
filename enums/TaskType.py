@@ -1,4 +1,4 @@
-from enum import Enum, auto
+from enum import Enum
 
 """
 2026-01-31:
