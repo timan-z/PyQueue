@@ -116,9 +116,9 @@ function App() {
     <div id="mainPageWrapper">
       {/* Header: */}
       <header id="pageTitle">
-        <h1 id="mainHeader" className="headerEl">SpringQueue</h1>
+        <h1 id="mainHeader" className="headerEl">PyQueue</h1>
         <h2 className="headerEl">Basically just a bare-essentials simulation of Task Queue programs like Celery and Sidekiq</h2>
-        <p id="pageUndertext">The (backend) logic of which was built entirely in <b>Java-SpringBoot</b> (to help better understand <b>SpringBoot</b>) with a ReactTS-based Dashboard (<i>which is what you're on now</i>).</p>
+        <p id="pageUndertext">The (backend) logic of which was built entirely in <b>Python-FastAPI</b> (to help better understand <b>FastAPI</b>) with a ReactTS-based Dashboard (<i>which is what you're on now</i>).</p>
       </header>
 
       {/* Main Body: */}
@@ -209,18 +209,31 @@ function App() {
         {/* Small About Panel: */}
         <div id="AboutPanel">
           <h2>ABOUT PANEL:</h2>
-          <div style={{display:"inline"}}>
-          SpringQueue is a remake of my <a href="https://github.com/timan-z/gotaskqueue" target="_blank">GoQueue</a> project, which was a Task Queue Dashboard built to interact with a Go-based job/task processing system inspired 
-          by tools like Celery. As an initial project to begin my journey to Spring Boot proficiency: I made this project to better grasp dependency injection and 
-          standard-fare annotations (e.g., @Service), get hands-on experience building a REST API, playing with Java's concurrency libraries, and familiarize w/ 
-          general good practices. It began by directly translating my Go logic one-to-one but then refactoring it to make the design more idiomatically Java. 
-          (More on this in the repo linked at the bottom of this panel). Regardless, the core logic remains the same (both built upon the Producer-Consumer model).
+
+          <div style={{ textAlign:"left" }}>
+            <b>PyQueue</b> is the Python/FastAPI evolution of my earlier task-queue projects, following
+            <a href="https://goqueue.netlify.app/" target="_blank" rel="noreferrer" style={{ textDecoration:"none"}} > GoQueue</a> (Go)
+            and <a href="https://springqueue.netlify.app/" target="_blank" rel="noreferrer" style={{ textDecoration:"none"}} > SpringQueue</a> (Java/Spring Boot),
+            and informed by the more production-oriented <b>SpringQueuePro</b>.
+            <br /><br />
+            While SpringQueuePro represents the most feature-complete and production-heavy implementation,
+            PyQueue focuses on translating those architectural ideas into the Python ecosystem using FastAPI.
+            It emphasizes explicit dependency management, clear API contracts, backend-first design, and
+            deliberate separation between domain models and API schemas.
+            <br /><br />
+            Rather than being a simple port, PyQueue serves as a comparative backend study—highlighting how
+            concurrency, dependency injection, and service boundaries differ between Go, Java/Spring, and
+            Python/FastAPI while preserving the same core Producer–Consumer queue model.
           </div>
+
           <ul>
-            <li>Queue size is hardcoded as 100 with a fixed # of 3 workers.</li>
-            <li>Job Type Time (s) refers to the time it takes for each worker subroutine to complete the Job/Task (<i>pick "takes-long" and immediately click "Get All Jobs", see its status, and then wait 10s and try again</i>).</li>
+            <li>Fixed worker pool (3 workers) with an in-memory task registry.</li>
+            <li>Task execution times vary by task type to simulate real-world workloads.</li>
+            <li>Retry behavior and execution metadata are exposed for inspection and learning.</li>
           </ul>
-          Currently hosted on Netlify and Railway. See <a href="https://github.com/timan-z/SpringQueue" target="_blank">README and GitHub repo</a> for further information.
+
+          Currently hosted on Netlify (frontend) and Railway (backend).
+          See the <a href="https://github.com/timan-z/PyQueue" target="_blank" rel="noreferrer" style={{ textDecoration:"none"}}>README and GitHub repo</a> for deeper technical details.
         </div>
       </main>
     </div>
