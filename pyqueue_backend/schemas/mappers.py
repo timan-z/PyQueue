@@ -8,5 +8,7 @@ def task_to_response(task: Task) -> TaskResponse:
         payload=task.payload,
         type=task.t_type.value,
         status=task.status.value,
+        attempts=task.attempts,
+        max_retries=task.max_retries,
         created_at=task.created_at.isoformat()
     )

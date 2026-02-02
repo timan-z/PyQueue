@@ -21,6 +21,8 @@ export interface Task {
   payload: string;
   type: string;        // backend enum value (e.g. "EMAIL")
   status: string;      // backend enum value (e.g. "FAILED")
+  attempts: number;
+  max_retries: number;
   created_at: string;  // ISO-8601 timestamp (PyQueue-specific)
 }
 

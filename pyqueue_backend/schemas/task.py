@@ -27,6 +27,8 @@ class TaskResponse(BaseModel):
     payload: str
     type: str
     status: str
+    attempts: int
+    max_retries: int
     created_at: str
 
 """
