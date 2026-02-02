@@ -25,6 +25,24 @@ mapper layer in schemas/mappers.py ensuring all transformations were deliberate.
 class TaskResponse(BaseModel):
     id: str
     payload: str
-    type: TaskType
-    status: TaskStatus
-    created_at: datetime.datetime
+    type: str
+    status: str
+    created_at: str
+
+"""
+2026-02-02-NOTE: For later documentation:
+```
+TaskResponse exists purely as an API-facing Data Transfer Object (DTO) and has no influence on PyQueue’s core runtime behavior. 
+The internal domain model (Task) continues to use strongly-typed enums (TaskType, TaskStatus) and Python-native types to preserve correctness,
+invariants, and clarity within the system.
+
+At the API boundary, these internal representations are explicitly serialized into stable, string-based fields via task_to_response. 
+Enum values are exposed using their .value (e.g., "FAILED", "EMAIL"), preserving a consistent, filterable vocabulary for clients while avoiding 
+leakage of internal enum semantics. Datetime values are converted to ISO-8601 strings to establish an explicit and language-agnostic 
+temporal contract.
+
+This design mirrors established backend practices (e.g., Spring DTOs): the response schema is a compatibility layer for external consumers, 
+not a driver of internal logic. As a result, the core system remains free to evolve independently of frontend or client concerns.
+```
+"""
+# Basically TaskResponse defines the public PyQueue API. And everything else is internal.

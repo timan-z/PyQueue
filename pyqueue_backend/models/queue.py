@@ -2,7 +2,6 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 from typing import Optional, Callable
 
-from enums.TaskStatus import TaskStatus
 from models.task import Task
 
 # 2026-02-01-NOTE: Adding this to fix circular dependency that I masked earlier w/ a local import in enqueue():

@@ -2,24 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="60a1b25e-47ef-488b-b7b3-6d68a76ea35a" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/PyQueue.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/PyQueue.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/TO-DO.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/enums/TaskStatus.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/enums/TaskType.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/queue.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/task.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/phase-1-translation-notes.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/phase-2-fastapi-integration.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/phase-3-dependency-injection-refactoring.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/schemas/mappers.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/schemas/task.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/system/producer.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/system/worker.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test_main.http" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyqueue_backend/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/pyqueue_backend/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyqueue_backend/models/queue.py" beforeDir="false" afterPath="$PROJECT_DIR$/pyqueue_backend/models/queue.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyqueue_backend/schemas/mappers.py" beforeDir="false" afterPath="$PROJECT_DIR$/pyqueue_backend/schemas/mappers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyqueue_backend/schemas/task.py" beforeDir="false" afterPath="$PROJECT_DIR$/pyqueue_backend/schemas/task.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -128,19 +115,6 @@
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/PyQueue-Backend/schemas/task.py</url>
           <option name="timeStamp" value="2" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/pyqueue_backend/system/producer.py</url>
-          <option name="timeStamp" value="3" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/pyqueue_backend/schemas/mappers.py</url>
-          <line>1</line>
-          <option name="timeStamp" value="4" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/pyqueue_backend/schemas/task.py</url>
-          <option name="timeStamp" value="5" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
