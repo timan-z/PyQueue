@@ -1,5 +1,7 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 from models.queue import Queue
 from system.producer import router
 from system.worker import Worker
@@ -18,6 +20,9 @@ To layer in FastAPI's DI, I need to store Queue on app.state and then access it 
 app.state is FastAPI's official shared application container (and in it we declare one queue instance for the entire app).
 ```
 """
+
+load_dotenv()
+FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
 
 def worker_factory(task, queue):
     return Worker(task, queue).run

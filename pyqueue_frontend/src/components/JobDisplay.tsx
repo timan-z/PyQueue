@@ -55,8 +55,11 @@ const JobDisplay: React.FC<JobDisplayProps> = ({job, refreshJobs, setLoading, se
                 <div><b>Payload:</b>{job?.payload}</div>
                 <div><b>Type:</b>{job?.type}</div>
                 <div><b>Attempts:</b>{job?.attempts}</div>
-                <div><b>Max Retries:</b>{job?.maxRetries}</div>
-                <div><b>Created At:</b>{job?.createdAt}</div>
+                <div><b>Max Retries:</b>{job?.max_retries}</div>
+                <div>
+                    <b>Created At:</b>{" "}
+                    {job ? new Date(job.created_at).toLocaleString() : ""}
+                </div>
             </div>
             
             {/* Buttons to interact w/ the Job Display Box. (Delete specific job or Retry if it failed): */}
@@ -65,7 +68,7 @@ const JobDisplay: React.FC<JobDisplayProps> = ({job, refreshJobs, setLoading, se
                 <button onClick={()=>goDeleteJob(job!.id)}>Delete this Job</button>
                 
                 {/* Want a button here that lets you retry this Job if it failed: */}
-                {job?.status == "failed" && <button onClick={()=>goRetryJob(job!.id)}>Retry this Job</button>}
+                {job?.status == "FAILED" && <button onClick={()=>goRetryJob(job!.id)}>Retry this Job</button>}
             </div>
         </div>
     );
