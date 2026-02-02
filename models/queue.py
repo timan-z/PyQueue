@@ -1,9 +1,18 @@
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
-from typing import Optional
+from typing import Optional, Callable
 
 from enums.TaskStatus import TaskStatus
 from models.task import Task
+
+# 2026-02-01-NOTE: Adding this to fix circular dependency that I masked earlier w/ a local import in enqueue():
+WorkerFactory = Callable[[Task, "Queue"], Callable[[], None]]
+"""
+^ WorkerFactory is just a function that knows how to create something that can execute a task.
+The arguments within Callable is the input [Task, "Queue"] ("Queue" is forward ref) and output Callable[[], None].
+(NOTE: The output being Callable[[], none] means the return type is another function that takes no arguments and returns nothing).
+This maps well to ThreadPoolExecutor because self.executor.submit(runnable) expects runnable: Callable[[], Any]. 
+"""
 
 """
 Avoid using async def, FastAPI background tasks, asyncio.Queue, and so on for now.
@@ -54,10 +63,11 @@ class Queue:
     """
 
     # 0. CONSTRUCTOR - Equivalent of SpringQueue's QueueService.java's constructor:
-    def __init__(self) -> None:
+    def __init__(self, worker_factory: WorkerFactory) -> None:
         self.executor: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=3)   # TO-DO:+DEBUG: Eventually change max_workers to be configurable (like I did in SpringQueuePro -- later).
         self.jobs: dict[str, Task] = {}  # This will be the task registry (equivalent of ConcurrentHashMap<String, Task> in SpringQueue).
         self.lock: Lock = Lock()  # Lock to protect shared state (there's no RWLock in Python. This and the {} above are queue.py's ConcurrentHashMap...)
+        self.worker_factory = worker_factory
 
     # 1. Enqueue a task: Translating - public void enqueue(Task t) {...}:
     def enqueue(self, task: Task) -> None:
@@ -65,13 +75,14 @@ class Queue:
         Registers a Task and submits it for execution.
         Assumes the task is already fully initialized.
         """
-        from system.worker import Worker    # TO-DO: This will be lifted out of here when FastAPI Dependency Injection is layered in.
+        #from system.worker import Worker    # TO-DO: This will be lifted out of here when FastAPI Dependency Injection is layered in.
 
         # 2026-01-31: Original Lock and release effect replaced with context manager - lock lifts when all lines are executed (basically just shortens code):
         with self.lock:
             self.jobs[task.t_id] = task
-        worker = Worker(task, self)
-        self.executor.submit(worker.run)
+
+        runnable = self.worker_factory(task, self)
+        self.executor.submit(runnable)
         # Earlier stage legacy code (code structure directly from the SpringQueue and GoQueue translation phase):
         """
         task.status = TaskStatus.QUEUED

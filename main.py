@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from models.queue import Queue
 from system.producer import router
+from system.worker import Worker
 from contextlib import asynccontextmanager
 
 """
@@ -17,11 +18,14 @@ app.state is FastAPI's official shared application container (and in it we decla
 ```
 """
 
+def worker_factory(task, queue):
+    return Worker(task, queue).run
+
 @asynccontextmanager
 async def lifespan(the_app: FastAPI):
     # 2026-02-01-NOTE: FastAPI DI Refactor.
     # On startup:
-    the_app.state.queue = Queue()
+    the_app.state.queue = Queue(worker_factory=worker_factory)
     try:
         yield
     finally:
