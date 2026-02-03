@@ -24,6 +24,8 @@ app.state is FastAPI's official shared application container (and in it we decla
 load_dotenv()
 FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
 
+print("FRONTEND_ORIGIN =", os.getenv("FRONTEND_ORIGIN"))
+
 def worker_factory(task, queue):
     return Worker(task, queue).run
 
