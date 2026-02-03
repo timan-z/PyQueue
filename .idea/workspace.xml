@@ -2,8 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="60a1b25e-47ef-488b-b7b3-6d68a76ea35a" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pyqueue_backend/schemas/task.py" beforeDir="false" afterPath="$PROJECT_DIR$/pyqueue_backend/schemas/task.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyqueue_backend/phase-1-translation-notes.md" beforeDir="false" afterPath="$PROJECT_DIR$/additional_docs/phase-1-translation-notes.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyqueue_backend/phase-2-fastapi-integration.md" beforeDir="false" afterPath="$PROJECT_DIR$/additional_docs/phase-2-fastapi-integration.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyqueue_backend/phase-3-dependency-injection-refactoring.md" beforeDir="false" afterPath="$PROJECT_DIR$/additional_docs/phase-3-dependency-injection-refactoring.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyqueue_backend/phase-4-frontend-integration.md" beforeDir="false" afterPath="$PROJECT_DIR$/additional_docs/phase-4-frontend-integration.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyqueue_backend/phase-4-part-2-netlify-railway-deployment.md" beforeDir="false" afterPath="$PROJECT_DIR$/additional_docs/phase-4-part-2-netlify-railway-deployment.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,6 +65,13 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\timan\PycharmProjects\PyQueue\additional_docs" />
+      <recent name="C:\Users\timan\PycharmProjects\PyQueue" />
+      <recent name="C:\Users\timan\PycharmProjects\PyQueue\pyqueue_backend" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="PyQueue" type="Python.FastAPI">
       <option name="file" value="$PROJECT_DIR$/main.py" />
