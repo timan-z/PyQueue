@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="60a1b25e-47ef-488b-b7b3-6d68a76ea35a" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/pyqueue_backend/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/pyqueue_backend/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyqueue_backend/schemas/task.py" beforeDir="false" afterPath="$PROJECT_DIR$/pyqueue_backend/schemas/task.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
