@@ -22,7 +22,10 @@ app.state is FastAPI's official shared application container (and in it we decla
 """
 
 load_dotenv()
-FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173").rstrip("/")
+
+if not FRONTEND_ORIGIN:
+    raise RuntimeError("FRONTEND_ORIGIN is not set")
 
 print("FRONTEND_ORIGIN =", os.getenv("FRONTEND_ORIGIN"))
 
