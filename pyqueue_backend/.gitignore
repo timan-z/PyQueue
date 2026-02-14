@@ -23,4 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# Python virtual environments:
+.venv/
+venv/
+pyqueue_backend/.venv/
+
 .env
