@@ -48,7 +48,7 @@ Base.metadata.create_all(bind=engine)   # No harm having it included.
 with SessionLocal() as session:
     # Creating a Task Object:
     task1 = Task(
-        id = "Task-4856593849314705",
+        task_id = "Task-4856593849314705",
         payload = "Send en email.",
         status = "QUEUED",
         task_type = "EMAIL"
@@ -57,7 +57,7 @@ with SessionLocal() as session:
     try:
         session.add(task1)  # Add it.
         session.commit()    # Commit it.
-        retrieve_task = session.query(Task).filter_by(id = task1.id).first()  # Query it back by id.
+        retrieve_task = session.query(Task).filter_by(task_id = task1.task_id).first()  # Query it back by id.
         print("Something meaningful: ", retrieve_task)  # Print something meaningful.
     except IntegrityError as e:
         print("Test 1 rollback about to happen.")
@@ -68,7 +68,7 @@ with SessionLocal() as session:
 # Test #2
 with SessionLocal() as session:
     task2 = Task(
-        id = "Task-idunnoman",
+        task_id = "Task-idunnoman",
         payload = "Send a CRAZY email.",
         status = "QUEUED",
         task_type = "EMAIL"
@@ -84,14 +84,14 @@ with SessionLocal() as session:
 with SessionLocal() as session:
     unique_id = "Task-" + str(uuid.uuid4())
     u_task = Task(
-        id = unique_id,
+        task_id = unique_id,
         payload = "unique ID payload",
         status = "QUEUED",
         task_type = "EMAIL"
     )
     session.add(u_task)
     session.commit()
-    retrieve_task = session.query(Task).filter_by(id=u_task.id).first()  # Query it back by id.
+    retrieve_task = session.query(Task).filter_by(task_id=u_task.task_id).first()  # Query it back by id.
     print("Retrieving unique task: ", retrieve_task)  # Print something meaningful.
 
 """

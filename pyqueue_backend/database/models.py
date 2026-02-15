@@ -3,7 +3,7 @@ from .base import Base
 
 class Task(Base):
     __tablename__ = "tasks"
-    id = Column(String(50), primary_key = True) # primary_key ensures uniqueness so I don't need a unique=True field tacked on.
+    task_id = Column(String(50), primary_key = True) # primary_key ensures uniqueness so I don't need a unique=True field tacked on.
     payload = Column(Text, nullable = False)
     status = Column(String(50), nullable=False, index=True) # Remember that index should be applied to fields that'll be queried.
     task_type = Column(String(50), nullable=False, index=True)
@@ -14,7 +14,7 @@ class Task(Base):
     # Method below is for defining a developer-facing string rep of an object.
     def __repr__(self):
         return (
-            f"<Task(id={self.id!r}, "   # {self.id!r} calls repr() on the value.
+            f"<Task(task_id={self.task_id!r}, "   # {self.id!r} calls repr() on the value.
             f"status={self.status!r}, "
             f"task_type={self.task_type!r}, "
             f"attempts={self.attempts!r}, "
