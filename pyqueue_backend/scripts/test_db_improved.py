@@ -13,10 +13,11 @@ from database.base import Base
 from database.engine import engine
 from database.session import SessionLocal
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 # Helper function for creating a Task and processing it w/ the session. Returns queried __repr__ string from local MySQL DB.
 # DEBUG: Is it FastAPI best practice to add type hints to all parameters/fields for methods or that just for endpoint stuff? - Look into this..
-def create_task(session, id: str, payload: str, status: str, task_type: str) -> str | None:
+def create_task(session: Session, id: str, payload: str, status: str, task_type: str) -> str | None:
     task = Task(id=id, payload=payload, status=status, task_type=task_type)
     try:
         session.add(task)
