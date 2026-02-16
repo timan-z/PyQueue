@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 """
@@ -26,7 +28,11 @@ class TaskResponse(BaseModel):
     status: str
     attempts: int
     max_retries: int
-    created_at: str
+    created_at: datetime
+
+class TaskCreate(BaseModel):
+    payload: str
+    type: str
 
 """
 2026-02-02-NOTE: For later documentation:

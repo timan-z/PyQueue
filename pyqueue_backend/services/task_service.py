@@ -31,10 +31,9 @@ class TaskService:
             #self.db.refresh(new_task)   # I have default fields set e.g., created_at - this refresh is making sure they're set in the new_task object.
             return new_task
         except IntegrityError:
-            self.db.rollback()
             raise
         except Exception:
-            self.db.rollback()
             raise
 
-
+    def get_task(self, task_id: str) -> Task | None:
+        return self.db.query(Task).filter_by(task_id=task_id).first()
