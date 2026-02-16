@@ -26,8 +26,9 @@ class TaskService:
         new_task = Task(task_id=task_id, payload=payload, status=status, task_type=task_type)
         try:
             self.db.add(new_task)
-            self.db.commit()
-            self.db.refresh(new_task)   # I have default fields set e.g., created_at - this refresh is making sure they're set in the new_task object.
+            # EDIT: Smarter to have commit() + refresh() outside of here - something I should practice given I'll be in fintech soon.
+            #self.db.commit()
+            #self.db.refresh(new_task)   # I have default fields set e.g., created_at - this refresh is making sure they're set in the new_task object.
             return new_task
         except IntegrityError:
             self.db.rollback()

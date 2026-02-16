@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from models.queue import Queue
 from system.producer import router
+from routes.db_tasks import router as db_router
 from system.worker import Worker
 from contextlib import asynccontextmanager
 
@@ -59,6 +60,7 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=[FRONTEND_ORIGIN],allow_credentials=True,allow_methods=["*"],allow_headers=["*"],)
 # ^ TO-DO: ^ I should 100% externalize the origins destination to an environmental variable (need this for Railway deployment later anyways).
 app.include_router(router)
+app.include_router(db_router)
 
 @app.get("/")
 async def root():

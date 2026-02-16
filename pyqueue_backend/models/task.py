@@ -1,3 +1,9 @@
+"""
+DEPRECATED:
+In-memory Task model.
+Replaced by database.models.Task (SQLAlchemy ORM).
+Kept temporarily during migration phase.
+"""
 import datetime
 import time
 from dataclasses import dataclass
