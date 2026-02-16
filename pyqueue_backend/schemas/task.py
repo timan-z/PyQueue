@@ -32,7 +32,7 @@ class TaskResponse(BaseModel):
 
 class TaskCreate(BaseModel):
     payload: str
-    type: str
+    task_type: str
 
 """
 2026-02-02-NOTE: For later documentation:
