@@ -37,3 +37,14 @@ class TaskService:
 
     def get_task(self, task_id: str) -> Task | None:
         return self.db.query(Task).filter_by(task_id=task_id).first()
+
+    def get_tasks(self) -> list[Task]:
+        return self.db.query(Task).all()
+
+    # Not sure if task deletion should return a Task, a string message, or nothing?
+    def delete_task(self, task_id: str) -> Task | None:
+        task = self.db.query(Task).filter_by(task_id=task_id).first() #And task_id should be unique in the table so no need for first() or anything like that.
+        if not task:
+            return None
+        self.db.delete(task)
+        return task

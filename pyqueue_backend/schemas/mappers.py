@@ -22,5 +22,5 @@ def orm_task_to_response(task: OrmTask) -> TaskResponse:
         status=task.status,
         attempts=task.attempts,
         max_retries=task.max_retries,
-        created_at=task.created_at.isoformat()
+        created_at=task.created_at
     )
