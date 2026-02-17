@@ -7,6 +7,8 @@ from system.producer import router
 from routes.db_tasks import router as db_router
 from system.worker import Worker
 from contextlib import asynccontextmanager
+from database.base import Base
+from database.engine import engine
 
 """
 For later documentation - some notes on layering in FastAPI's Dependency Injection:
@@ -32,6 +34,8 @@ print("FRONTEND_ORIGIN =", os.getenv("FRONTEND_ORIGIN"))
 
 def worker_factory(task, queue):
     return Worker(task, queue).run
+
+Base.metadata.create_all(bind=engine)
 
 @asynccontextmanager
 async def lifespan(the_app: FastAPI):
