@@ -1,0 +1,32 @@
+services:
+  api:
+    build: .
+    container_name: pyqueue_api
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+pymysql://pyqueue_user:password@mysql:3306/pyqueue
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8
+    container_name: pyqueue_mysql
+    environment:
+      MYSQL_DATABASE: pyqueue
+      MYSQL_USER: pyqueue_user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
