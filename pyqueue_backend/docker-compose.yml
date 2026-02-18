@@ -8,6 +8,8 @@ services:
     environment:
       DATABASE_URL: mysql+pymysql://pyqueue_user:password@mysql:3306/pyqueue
     restart: unless-stopped
+    env_file:
+      - .env
 
   mysql:
     image: mysql:8
