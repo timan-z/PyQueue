@@ -2,7 +2,7 @@ import os
 import logging
 import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from models.queue import Queue
@@ -12,6 +12,7 @@ from system.worker import Worker
 from contextlib import asynccontextmanager
 from database.base import Base
 from database.engine import engine
+from sqlalchemy.exc import OperationalError
 
 """
 For later documentation - some notes on layering in FastAPI's Dependency Injection:
@@ -48,6 +49,7 @@ logger = logging.getLogger(__name__)
 # Initializing Sentry for FastAPI:
 sentry_sdk.init(
     dsn=os.getenv("SENTRY_DSN"),
+    environment=os.getenv("APP_ENV", "development"),
     integrations=[FastApiIntegration()],
     traces_sample_rate=1.0,
 )
@@ -88,9 +90,29 @@ app.include_router(db_router)
 async def root():
     return {"message": "Hello World"}
 
+# SENTRY-LEARNING: Unhandled exception - Sentry catches automatically and sends to the server/sentry.io site.
 @app.get("/sentry-debug")
 async def trigger_error():
     division_by_zero = 1 / 0
+
+# SENTRY-LEARNING: These are handled exceptions that I'm supposed to manually mark sentry to "capture" and send up to the server.
+@app.get("/infra-error")
+async def infra_error():
+    try:
+        raise OperationalError("DataBase down", None, None)
+    except OperationalError as e:
+        sentry_sdk.capture_exception(e)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+# SENTRY-LEARNING: Playing around with and getting a feel for breadcrumbs.
+@app.get("/breadcrumb-demo")
+async def breadcrumb_demo():
+    sentry_sdk.add_breadcrumb(
+        category="task",
+        message="User attempted risky operation",
+        level="info",
+    )
+    return 1 / 0
 
 # PyCharm's default FastAPI set-up code:
 """

@@ -1,7 +1,9 @@
 import uuid
 import logging
+import sentry_sdk
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from database.session import get_db
 from services.task_service import TaskService
 from database.models import Task as OrmTask
@@ -33,9 +35,14 @@ def create_db_task(
         db.commit()
         db.refresh(task)
         return orm_task_to_response(task)
-    except Exception as e:
+    except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail="Duplicate Task")
+    except Exception as e:
+        # SENTRY-LEARNING: Going to adjust this one so it's caught by Sentry now.
+        db.rollback()
+        sentry_sdk.capture_exception(e)
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 """Retrieve a specific persisted task."""
 @router.get("/tasks/{task_id}", response_model=TaskResponse, status_code=200)
