@@ -1,4 +1,7 @@
 import os
+import logging
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -35,7 +38,22 @@ print("FRONTEND_ORIGIN =", os.getenv("FRONTEND_ORIGIN"))
 def worker_factory(task, queue):
     return Worker(task, queue).run
 
-Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)   # Creating the schema for tables if it's not there in the Docker MySQL instance or local instance.
+# Config for structure logs I'll be adding:
+logging.basicConfig(
+    level = logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+)
+logger = logging.getLogger(__name__)
+# Initializing Sentry for FastAPI:
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN"),
+    integrations=[FastApiIntegration()],
+    traces_sample_rate=1.0,
+)
+
+print("DEBUG: print check")
+#print("DEBUG: SENTRY_DSN = ", os.getenv("SENTRY_DSN"))
 
 @asynccontextmanager
 async def lifespan(the_app: FastAPI):
@@ -69,6 +87,10 @@ app.include_router(db_router)
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+@app.get("/sentry-debug")
+async def trigger_error():
+    division_by_zero = 1 / 0
 
 # PyCharm's default FastAPI set-up code:
 """

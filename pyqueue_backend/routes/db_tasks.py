@@ -1,4 +1,5 @@
 import uuid
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database.session import get_db
@@ -10,6 +11,8 @@ from schemas.mappers import orm_task_to_response
 
 router = APIRouter(prefix="/api/v1", tags=["Database Related"])
 
+logger = logging.getLogger(__name__)
+
 """Create a new persisted task."""
 @router.post("/tasks", response_model=TaskResponse, status_code=201)
 def create_db_task(
@@ -18,6 +21,7 @@ def create_db_task(
 ):
     service = TaskService(db)
     task_id = f"Task-{uuid.uuid4()}"
+    logger.info("LOGGER: Creating task", extra={"task_id": task_id})
 
     try:
         task = service.create_task(
@@ -39,6 +43,7 @@ def get_db_task(
         task_id: str,
         db: Session = Depends(get_db)
 ):
+    logger.info("LOGGER: Retrieving task", extra={"task_id": task_id})
     service = TaskService(db)
     task = service.get_task(task_id)
     if not task:
@@ -48,6 +53,7 @@ def get_db_task(
 """Get a list of persisted tasks."""
 @router.get("/tasks", response_model=list[TaskResponse], status_code=200)
 def get_db_tasks(db: Session = Depends(get_db)):
+    logger.info("LOGGER: Retrieving ALL tasks")
     service = TaskService(db)
     tasks = service.get_tasks()
     return [orm_task_to_response(t) for t in tasks]
@@ -59,6 +65,7 @@ def delete_db_task(
         task_id: str,
         db: Session = Depends(get_db)
 ):
+    logger.info("LOGGER: Deleting task", extra={"task_id": task_id})
     service = TaskService(db)
     task = service.delete_task(task_id)
     if not task:
